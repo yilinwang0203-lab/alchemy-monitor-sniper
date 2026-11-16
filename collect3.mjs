@@ -24,7 +24,8 @@ async function panel(){
 
 async function collectScreen(limit){
   let n=0, last=null;
-  for(let sc=0; sc<8; sc++){
+  let sc=0;
+  for(;; sc++){                       // 不限屏数：价格超限或列表到底才停
     const o=await ocr(await shot('col'));
     const items=[];
     for(const [k,col] of [['priceL',0],['priceR',1]])
@@ -36,6 +37,7 @@ async function collectScreen(limit){
         items.push({x:col?0.522:0.251, y:ty, col, price:Number(m)});
       }
     items.sort((a,b)=>a.price-b.price);
+    const nBefore=n;
     log(`    屏${sc+1} 价格 ${items.map(x=>x.price).join(',')}`);
     if(items.length && items[0].price>limit){ log(`    整屏都超过 ${limit}，收工`); break; }
     for(const it of items){
@@ -51,6 +53,7 @@ async function collectScreen(limit){
         n++;
       }
     }
+    if(n===nBefore){ log('    本屏没有新增（到底了），收工'); break; }   // 列表滚到底
     await swipe([0.40,0.82],[0.40,0.305],1000); await sleep(600);  // 2 行 / 4 件（0.515）
   }
   return n;

@@ -1,0 +1,5 @@
+{
+  "active": "main",
+  "main":  { "name": "主力机", "udid": "00008130-XXXXXXXXXXXXXXXX" },
+  "spare": { "name": "备用机", "udid": "" }
+}

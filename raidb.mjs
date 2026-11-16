@@ -35,7 +35,7 @@ async function fire(sec){
   const fresh = await readOnce('f');
   const s2 = (fresh && fresh.seconds!==null && fresh.seconds>0) ? fresh.seconds : sec;
   const unlockAt = Date.now() + s2*1000;
-  const startAt  = unlockAt - 5100;
+  const startAt  = unlockAt - 5200;
   log(`   读到时剩余 ${s2}s，推算解锁于 ${new Date(unlockAt).toISOString().slice(11,23)}`);
   const w = startAt - Date.now();
   if(w>0) await sleep(w);

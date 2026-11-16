@@ -1,13 +1,25 @@
 // B 版：不建表、不算排名。逐屏逐格读，够近就地守、到点打，打完刷新。
-import {connect, tap, swipe, seq, shot, ocr} from './dev.mjs';
+import {connect, tap, swipe, seq, shot, ocr, ROOT} from './dev.mjs';
+import {join} from 'node:path';
 import {parseSeconds, readOnce} from './timer.mjs';
 
 const F=/[0Oo]\.\d{5,6}/, norm=s=>(s||'').replace(/^[Oo]/,'0');
 const CELLS=[[0.251,0.295],[0.522,0.295],[0.251,0.505],[0.522,0.505],[0.251,0.716],[0.522,0.716]];
 const MAIN=[0.804,0.864], DLG=[0.6668,0.7271], STAR=[0.886,0.189], REFRESH=[0.647,0.108];
-const NEAR=45, MAXSCREEN=8;   // 每次 2 行，8 次覆盖 16 行
+const NEAR=45;
+// 运行时可调参数（控制台 App 写 .runtime/tuning.json，每次开打前重读）
+const TUNE_FILE = join(ROOT, '.runtime', 'tuning.json');
+let TUNE = {lead: 5200, dlgPause: 300};
+function loadTune(){
+  try {
+    const j = JSON.parse(readFileSync(TUNE_FILE, 'utf8'));
+    if (typeof j.lead === 'number') TUNE.lead = j.lead;
+    if (typeof j.dlgPause === 'number') TUNE.dlgPause = j.dlgPause;
+  } catch {}
+}
+loadTune();
 const sleep=ms=>new Promise(r=>setTimeout(r,Math.max(0,ms)));
-import {existsSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 const PAUSED='.runtime/PAUSED';
 async function waitIfPaused(){
   let n=0;
@@ -35,13 +47,14 @@ async function fire(sec){
   const fresh = await readOnce('f');
   const s2 = (fresh && fresh.seconds!==null && fresh.seconds>0) ? fresh.seconds : sec;
   const unlockAt = Date.now() + s2*1000;
-  const startAt  = unlockAt - 5200;
+  loadTune();                                   // 每枪前重读，按钮改了立刻生效
+  const startAt  = unlockAt - TUNE.lead;
   log(`   读到时剩余 ${s2}s，推算解锁于 ${new Date(unlockAt).toISOString().slice(11,23)}`);
   const w = startAt - Date.now();
   if(w>0) await sleep(w);
   // 一个请求里：主按钮开弹窗 → pause 2 秒 → 200 下狂点
   log(`   下发 ${ts()}（相对解锁 ${((Date.now()-unlockAt)/1000).toFixed(2)}s）`);
-  const burst=[{at:MAIN},{wait:300},{at:MAIN},{wait:300},{at:MAIN},{wait:200},{at:MAIN},{wait:300}];
+  const burst=[{at:MAIN},{wait:300},{at:MAIN},{wait:300},{at:MAIN},{wait:200},{at:MAIN},{wait:TUNE.dlgPause}];
   for(let i=0;i<123;i++) burst.push({at:DLG,hold:20},{wait:33});   // 实测约 68ms/下（试过 39 反而 64ms，这个 driver 不线性）
   const tBurst=Date.now();
   await seq(burst,20);

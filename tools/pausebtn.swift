@@ -7,7 +7,7 @@ let tunePath = "__WORKDIR__/.runtime/tuning.json"
 func sh(_ cmd: String) {
     let p = Process()
     p.executableURL = URL(fileURLWithPath: "/bin/bash")
-    p.arguments = ["-lc", "export PATH=\"/Users/macmini/.local/share/nodejs/node-v24.22.0-darwin-arm64/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH\"; " + cmd]
+    p.arguments = ["-lc", "export PATH=\"__NODEBIN__:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH\"; " + cmd]
     try? p.run()
 }
 func running(_ pat: String) -> Bool {

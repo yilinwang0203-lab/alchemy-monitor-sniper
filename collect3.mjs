@@ -13,7 +13,6 @@ const log=(...a)=>console.log(new Date().toISOString().slice(11,19),...a);
 
 await connect();
 const table=new Map();
-const MAXN=50;   // 上限 50 件（条件只有 S 级 + ≤650）
 
 async function panel(){
   const o=await ocr(await shot('p'));
@@ -25,7 +24,7 @@ async function panel(){
 
 async function collectScreen(limit){
   let n=0, last=null;
-  for(let sc=0; sc<8 && table.size<MAXN; sc++){
+  for(let sc=0; sc<8; sc++){
     const o=await ocr(await shot('col'));
     const items=[];
     for(const [k,col] of [['priceL',0],['priceR',1]])
@@ -40,7 +39,6 @@ async function collectScreen(limit){
     log(`    屏${sc+1} 价格 ${items.map(x=>x.price).join(',')}`);
     if(items.length && items[0].price>limit){ log(`    整屏都超过 ${limit}，收工`); break; }
     for(const it of items){
-      if(table.size>=MAXN) break;
       if(it.price>limit) continue;
       await tap(it.x, it.y); await sleep(320);
       let d=await panel();
@@ -89,7 +87,6 @@ async function posOf(k){
 const ONLY=process.env.ONLY? process.env.ONLY.split(',') : null;
 const TARGETS=ONLY|| ['AUG','腾龙','沙鹰'];
 for(const name of TARGETS){
-  if(table.size>=MAXN){ log(`表已满 ${MAXN} 件，停止采集`); break; }
   let ey=await posOf(KEY[name]);                       // 当前就在列表页，直接读
   if(ey===null){ log(`   列表里找不到 ${name}，跳过`); continue; }
   log(`   入口 ${name} 在 y=${ey.toFixed(3)}`);
